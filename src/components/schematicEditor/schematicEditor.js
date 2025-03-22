@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef } from "react";
 import { darkModeTheme } from "../themeManager/themes";
+import { Menu } from "antd";
+import ToolSelector from "./toolSelector";
 
 function SchematicEditor() {
   const canvasRef = useRef(null);
   const scale = useRef(1);
   const middleMouse = useRef(false);
+  const leftMouse = useRef(false);
   const mousePosRef = useRef({ x: 0, y: 0 });
   const currentPosRef = useRef({ x: 0, y: 0 });
   const lastMousePosRef = useRef({ x: 0, y: 0 });
@@ -18,8 +21,10 @@ function SchematicEditor() {
     };
     resizeCanvas();
     const ctx = canvas.getContext("2d");
-    const gridSize = 20;
-    const numGrid = 20;
+    const gridSize = 40;
+
+    const schematicWidth = 1200;
+    const schematicHeight = 800;
 
     const drawGrid = () => {
       ctx.save(); // Clear the canvas with transform
@@ -29,21 +34,34 @@ function SchematicEditor() {
 
       ctx.fillStyle = darkModeTheme.primary;
       ctx.beginPath();
-      // ctx.rect(0, 0, canvas.width, canvas.height);
+      ctx.rect(
+        0,
+        0,
+        schematicWidth / scale.current,
+        schematicHeight / scale.current
+      );
 
       ctx.fill();
       ctx.save();
 
-      ctx.scale(scale.current, scale.current);
-
-      for (let x = 0; x < canvas.width / scale.current; x += gridSize) {
-        for (let y = 0; y < canvas.height / scale.current; y += gridSize) {
+      for (
+        let x = gridSize / scale.current;
+        x < schematicWidth / scale.current - gridSize / scale.current;
+        x += gridSize / scale.current
+      ) {
+        for (
+          let y = gridSize / scale.current;
+          y < schematicHeight / scale.current - gridSize / scale.current;
+          y += gridSize / scale.current
+        ) {
           ctx.moveTo(x - 2, y);
           ctx.lineTo(x + 2, y);
           ctx.moveTo(x, y - 2);
           ctx.lineTo(x, y + 2);
         }
       }
+
+      // ctx.moveTo(0, 0);
 
       ctx.strokeStyle = "#ddd";
       ctx.stroke();
@@ -65,6 +83,9 @@ function SchematicEditor() {
     };
 
     const mousedown = (event) => {
+      if (event.buttons == 1) {
+        leftMouse.current = true;
+      }
       if (event.buttons == 4) {
         event.preventDefault();
         middleMouse.current = true;
@@ -74,6 +95,7 @@ function SchematicEditor() {
 
     const mouseup = (event) => {
       middleMouse.current = false;
+      leftMouse.current = false;
     };
 
     const mousemove = (event) => {
@@ -90,8 +112,6 @@ function SchematicEditor() {
           x: currentPosRef.current.x + dx,
           y: currentPosRef.current.y + dy,
         };
-
-        // console.log(currentGridPosRef.current);
 
         ctx.translate(dx, dy);
 
@@ -124,15 +144,21 @@ function SchematicEditor() {
     };
   }, []);
 
+  const currentTool = null;
+
   return (
-    <canvas
-      ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
-      style={{
-        backgroundColor: darkModeTheme.primary,
-      }}
-    />
+    <div>
+      <ToolSelector currentTool={currentTool} />
+      <canvas
+        ref={canvasRef}
+        width={window.innerWidth}
+        height={window.innerHeight}
+        style={{
+          backgroundColor: darkModeTheme.primary,
+          padding: 0,
+        }}
+      />
+    </div>
   );
 }
 

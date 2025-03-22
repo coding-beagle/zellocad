@@ -16,6 +16,8 @@ function SchematicEditor() {
   const topLeftOfSchemRef = useRef({ x: 0, y: 0 });
   const currentToolRef = useRef(null);
   const canDragRef = useRef(true);
+  const drawingWire = useRef(false);
+  const wirePoints = useRef([]);
 
   const [currentTool, setCurrentTool] = useState(null);
 
@@ -40,6 +42,26 @@ function SchematicEditor() {
 
     const schematicWidth = 1600;
     const schematicHeight = 900;
+
+    // lmao
+    const getCurrentClosestGridToMouse = () => {
+      return {
+        x:
+          (Math.round(
+            ((mousePosRef.current.x - topLeftOfSchemRef.current.x) / gridSize) *
+              scale.current
+          ) *
+            gridSize) /
+          scale.current,
+        y:
+          (Math.round(
+            ((mousePosRef.current.y - topLeftOfSchemRef.current.y) / gridSize) *
+              scale.current
+          ) *
+            gridSize) /
+          scale.current,
+      };
+    };
 
     const drawGrid = () => {
       ctx.save(); // Clear the canvas with transform
@@ -80,36 +102,27 @@ function SchematicEditor() {
       ctx.stroke();
 
       if (currentToolRef.current === "wire") {
-        // ctx.save();
-        // ctx.setTransform(1, 0, 0, 1, 0, 0);
+        const closestGridToMouse = getCurrentClosestGridToMouse();
 
-        // lmao
-        const closestGridToMouse = {
-          x:
-            (Math.round(
-              ((mousePosRef.current.x - topLeftOfSchemRef.current.x) /
-                gridSize) *
-                scale.current
-            ) *
-              gridSize) /
-            scale.current,
-          y:
-            (Math.round(
-              ((mousePosRef.current.y - topLeftOfSchemRef.current.y) /
-                gridSize) *
-                scale.current
-            ) *
-              gridSize) /
-            scale.current,
-        };
-
-        console.log("Drawing at ", closestGridToMouse);
         ctx.moveTo(closestGridToMouse.x - 10, closestGridToMouse.y);
         ctx.lineTo(closestGridToMouse.x + 10, closestGridToMouse.y);
         ctx.moveTo(closestGridToMouse.x, closestGridToMouse.y - 10);
         ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y + 10);
         ctx.stroke();
-        // ctx.restore();
+
+        if (drawingWire.current) {
+          console.log(wirePoints.current);
+          ctx.moveTo(
+            wirePoints.current[wirePoints.current.length - 1][
+              wirePoints.current[wirePoints.current.length - 1].length - 1
+            ].x,
+            wirePoints.current[wirePoints.current.length - 1][
+              wirePoints.current[wirePoints.current.length - 1].length - 1
+            ].y
+          );
+          ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y);
+          ctx.stroke();
+        }
       }
 
       // draw selection box
@@ -149,12 +162,30 @@ function SchematicEditor() {
       if (event.buttons == 1) {
         leftMouse.current = true;
         selectStartPosRef.current = mousePosRef.current;
+        if (currentToolRef.current === "wire" && !drawingWire.current) {
+          drawingWire.current = true;
+          if (wirePoints.current.length > 0) {
+            wirePoints.current[wirePoints.current.length - 1].push([
+              getCurrentClosestGridToMouse(),
+            ]);
+          } else {
+            wirePoints.current.push([getCurrentClosestGridToMouse()]);
+          }
+
+          console.log(wirePoints.current);
+        }
       }
       if (event.buttons == 4) {
         event.preventDefault();
         middleMouse.current = true;
         lastMousePosRef.current = { x: event.clientX, y: event.clientY };
       }
+    };
+
+    const handleContextMenu = (e) => {
+      // prevent the right-click menu from appearing
+      e.preventDefault();
+      drawingWire.current = false;
     };
 
     const mouseup = (event) => {
@@ -195,11 +226,19 @@ function SchematicEditor() {
       drawGrid();
     };
 
+    const handleKeyPress = (event) => {
+      if (event.key === "Escape") {
+        setCurrentTool(null);
+      }
+    };
+
     window.addEventListener("wheel", handleWheel);
     window.addEventListener("mousedown", mousedown);
     window.addEventListener("mouseup", mouseup);
     window.addEventListener("mousemove", mousemove);
     window.addEventListener("resize", resizeHandler);
+    window.addEventListener("keydown", handleKeyPress);
+    window.addEventListener("contextmenu", handleContextMenu);
 
     drawGrid();
 
@@ -209,6 +248,8 @@ function SchematicEditor() {
       window.removeEventListener("mouseup", mouseup);
       window.removeEventListener("mousemove", mousemove);
       window.removeEventListener("resize", resizeHandler);
+      window.removeEventListener("keydown", handleKeyPress);
+      window.removeEventListener("contextmenu", handleContextMenu);
     };
   }, []);
 

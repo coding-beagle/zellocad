@@ -13,6 +13,7 @@ function SchematicEditor() {
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const currentGridPosRef = useRef({ x: 0, y: 0 });
   const selectStartPosRef = useRef({ x: 0, y: 0 });
+  const topLeftOfSchemRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -24,8 +25,8 @@ function SchematicEditor() {
     const ctx = canvas.getContext("2d");
     const gridSize = 40;
 
-    const schematicWidth = 1200;
-    const schematicHeight = 800;
+    const schematicWidth = 1500;
+    const schematicHeight = 900;
 
     const drawGrid = () => {
       ctx.save(); // Clear the canvas with transform
@@ -41,9 +42,29 @@ function SchematicEditor() {
         schematicWidth / scale.current,
         schematicHeight / scale.current
       );
+      ctx.closePath();
 
       ctx.fill();
-      ctx.save();
+
+      for (
+        let x = gridSize / scale.current;
+        x < schematicWidth / scale.current - gridSize / scale.current;
+        x += gridSize / scale.current
+      ) {
+        for (
+          let y = gridSize / scale.current;
+          y < schematicHeight / scale.current - gridSize / scale.current;
+          y += gridSize / scale.current
+        ) {
+          ctx.moveTo(x - 1, y);
+          ctx.lineTo(x + 1, y);
+          ctx.moveTo(x, y - 1);
+          ctx.lineTo(x, y + 1);
+        }
+      }
+
+      ctx.strokeStyle = "#ddd";
+      ctx.stroke();
 
       if (leftMouse.current) {
         ctx.save(); // Clear the canvas with transform
@@ -57,30 +78,10 @@ function SchematicEditor() {
           mousePosRef.current.x - selectStartPosRef.current.x,
           mousePosRef.current.y - selectStartPosRef.current.y
         );
+        ctx.closePath();
         ctx.stroke();
         ctx.restore();
       }
-
-      for (
-        let x = gridSize / scale.current;
-        x < schematicWidth / scale.current - gridSize / scale.current;
-        x += gridSize / scale.current
-      ) {
-        for (
-          let y = gridSize / scale.current;
-          y < schematicHeight / scale.current - gridSize / scale.current;
-          y += gridSize / scale.current
-        ) {
-          ctx.moveTo(x - 2, y);
-          ctx.lineTo(x + 2, y);
-          ctx.moveTo(x, y - 2);
-          ctx.lineTo(x, y + 2);
-        }
-      }
-
-      ctx.strokeStyle = "#ddd";
-      ctx.stroke();
-      ctx.restore();
     };
 
     const handleWheel = (event) => {
@@ -88,7 +89,7 @@ function SchematicEditor() {
       const { deltaX, deltaY } = event;
       resizeCanvas();
 
-      ctx.translate(currentGridPosRef.current.x, currentGridPosRef.current.y);
+      ctx.translate(topLeftOfSchemRef.current.x, topLeftOfSchemRef.current.y);
 
       const zoomIntensity = 0.1;
       const zoom = Math.exp((deltaY * zoomIntensity) / 100);
@@ -113,6 +114,7 @@ function SchematicEditor() {
     const mouseup = (event) => {
       middleMouse.current = false;
       leftMouse.current = false;
+      drawGrid();
     };
 
     const mousemove = (event) => {
@@ -130,8 +132,14 @@ function SchematicEditor() {
         y: currentPosRef.current.y + dy,
       };
 
+      console.log(topLeftOfSchemRef.current);
+
       if (middleMouse.current) {
         ctx.translate(dx, dy);
+        topLeftOfSchemRef.current = {
+          x: topLeftOfSchemRef.current.x + dx,
+          y: topLeftOfSchemRef.current.y + dy,
+        };
       }
 
       lastMousePosRef.current = { x: event.clientX, y: event.clientY };

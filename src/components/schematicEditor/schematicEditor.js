@@ -15,6 +15,9 @@ function SchematicEditor() {
   const selectStartPosRef = useRef({ x: 0, y: 0 });
   const topLeftOfSchemRef = useRef({ x: 0, y: 0 });
 
+  const [currentTool, setCurrentTool] = useState(null);
+  const [canDrag, setCanDrag] = useState(true);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const resizeCanvas = () => {
@@ -25,7 +28,7 @@ function SchematicEditor() {
     const ctx = canvas.getContext("2d");
     const gridSize = 40;
 
-    const schematicWidth = 1500;
+    const schematicWidth = 1600;
     const schematicHeight = 900;
 
     const drawGrid = () => {
@@ -108,7 +111,6 @@ function SchematicEditor() {
         middleMouse.current = true;
         lastMousePosRef.current = { x: event.clientX, y: event.clientY };
       }
-      // drawGrid();
     };
 
     const mouseup = (event) => {
@@ -148,7 +150,6 @@ function SchematicEditor() {
 
     const resizeHandler = (event) => {
       resizeCanvas();
-
       drawGrid();
     };
 
@@ -169,11 +170,9 @@ function SchematicEditor() {
     };
   }, []);
 
-  const currentTool = null;
-
   return (
     <div>
-      <ToolSelector currentTool={currentTool} />
+      <ToolSelector currentTool={currentTool} setCurrentTool={setCurrentTool} />
       <canvas
         ref={canvasRef}
         width={window.innerWidth}

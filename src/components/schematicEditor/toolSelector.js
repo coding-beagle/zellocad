@@ -5,9 +5,7 @@ import { useState } from "react";
 //   paddingTop: "1em",
 // };
 
-function ToolSelector(currentTool) {
-  const [selectedTool, setSelectedTool] = useState(null);
-  currentTool = selectedTool;
+function ToolSelector({ currentTool, setCurrentTool }) {
   return (
     <div
       style={{
@@ -23,24 +21,19 @@ function ToolSelector(currentTool) {
     >
       <Button
         onClick={() => {
-          alert("Tool has been selected");
+          currentTool == "wire" ? setCurrentTool(null) : setCurrentTool("wire");
         }}
+        type={currentTool === "wire" ? "primary" : "default"}
       >
         Wire
       </Button>
       <Button
         onClick={() => {
-          alert("Tool has been selected");
+          currentTool == "NC" ? setCurrentTool(null) : setCurrentTool("NC");
         }}
+        type={currentTool === "NC" ? "primary" : "default"}
       >
-        Yap
-      </Button>
-      <Button
-        onClick={() => {
-          alert("Tool has been selected");
-        }}
-      >
-        IDK
+        X
       </Button>
     </div>
   );

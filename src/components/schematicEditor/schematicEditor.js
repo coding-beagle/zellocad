@@ -18,6 +18,7 @@ function SchematicEditor() {
   const canDragRef = useRef(true);
   const drawingWire = useRef(false);
   const wirePoints = useRef([]);
+  const currentWirePoints = useRef([]);
 
   const [currentTool, setCurrentTool] = useState(null);
 
@@ -111,19 +112,39 @@ function SchematicEditor() {
         ctx.stroke();
 
         if (drawingWire.current) {
-          console.log(wirePoints.current);
           ctx.moveTo(
-            wirePoints.current[wirePoints.current.length - 1][
-              wirePoints.current[wirePoints.current.length - 1].length - 1
-            ].x,
-            wirePoints.current[wirePoints.current.length - 1][
-              wirePoints.current[wirePoints.current.length - 1].length - 1
-            ].y
+            currentWirePoints.current[currentWirePoints.current.length - 1].x,
+            currentWirePoints.current[currentWirePoints.current.length - 1].y
           );
           ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y);
           ctx.stroke();
+
+          if (currentWirePoints.current.length > 1) {
+            ctx.moveTo(
+              currentWirePoints.current[0].x,
+              currentWirePoints.current[0].y
+            );
+            currentWirePoints.current.forEach((point) => {
+              ctx.lineTo(point.x, point.y);
+            });
+            ctx.stroke();
+          }
         }
       }
+
+      // Draw all wire points
+      wirePoints.current.forEach((wire) => {
+        ctx.beginPath();
+        ctx.strokeStyle = darkModeTheme.secondaryAccent;
+        wire.forEach((point) => {
+          ctx.moveTo(point[0].x, point[0].y);
+          for (let i = 1; i < point.length; i++) {
+            ctx.lineTo(point[i].x, point[i].y);
+          }
+        });
+
+        ctx.stroke();
+      });
 
       // draw selection box
       if (leftMouse.current && canDragRef.current) {
@@ -164,15 +185,9 @@ function SchematicEditor() {
         selectStartPosRef.current = mousePosRef.current;
         if (currentToolRef.current === "wire" && !drawingWire.current) {
           drawingWire.current = true;
-          if (wirePoints.current.length > 0) {
-            wirePoints.current[wirePoints.current.length - 1].push([
-              getCurrentClosestGridToMouse(),
-            ]);
-          } else {
-            wirePoints.current.push([getCurrentClosestGridToMouse()]);
-          }
-
-          console.log(wirePoints.current);
+        }
+        if (drawingWire.current) {
+          currentWirePoints.current.push(getCurrentClosestGridToMouse());
         }
       }
       if (event.buttons == 4) {
@@ -185,7 +200,11 @@ function SchematicEditor() {
     const handleContextMenu = (e) => {
       // prevent the right-click menu from appearing
       e.preventDefault();
-      drawingWire.current = false;
+      if (drawingWire.current) {
+        wirePoints.current.push([currentWirePoints.current]);
+        currentWirePoints.current = [];
+        drawingWire.current = false;
+      }
     };
 
     const mouseup = (event) => {

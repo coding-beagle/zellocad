@@ -1,9 +1,5 @@
-import { Button } from "antd";
-import { useState } from "react";
-
-// const buttonStyle = {
-//   paddingTop: "1em",
-// };
+import { faCodeBranch, faXmark } from "@fortawesome/free-solid-svg-icons";
+import ToolSelectorTool from "./toolSelectorTool";
 
 function ToolSelector({ currentTool, setCurrentTool }) {
   return (
@@ -16,25 +12,20 @@ function ToolSelector({ currentTool, setCurrentTool }) {
         display: "flex",
         flexDirection: "column",
         gap: "0.2em", // Added gap between elements
-        maxWidth: "1em",
       }}
     >
-      <Button
-        onClick={() => {
-          currentTool == "wire" ? setCurrentTool(null) : setCurrentTool("wire");
-        }}
-        type={currentTool === "wire" ? "primary" : "default"}
-      >
-        Wire
-      </Button>
-      <Button
-        onClick={() => {
-          currentTool == "NC" ? setCurrentTool(null) : setCurrentTool("NC");
-        }}
-        type={currentTool === "NC" ? "primary" : "default"}
-      >
-        X
-      </Button>
+      <ToolSelectorTool
+        currentTool={currentTool}
+        setCurrentTool={setCurrentTool}
+        name={"wire"}
+        icon={faCodeBranch}
+      />
+      <ToolSelectorTool
+        currentTool={currentTool}
+        setCurrentTool={setCurrentTool}
+        name={"NC"}
+        icon={faXmark}
+      />
     </div>
   );
 }

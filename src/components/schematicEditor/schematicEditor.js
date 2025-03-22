@@ -14,9 +14,19 @@ function SchematicEditor() {
   const currentGridPosRef = useRef({ x: 0, y: 0 });
   const selectStartPosRef = useRef({ x: 0, y: 0 });
   const topLeftOfSchemRef = useRef({ x: 0, y: 0 });
+  const currentToolRef = useRef(null);
+  const canDragRef = useRef(true);
 
   const [currentTool, setCurrentTool] = useState(null);
-  const [canDrag, setCanDrag] = useState(true);
+
+  useEffect(() => {
+    currentToolRef.current = currentTool;
+    if (currentTool) {
+      canDragRef.current = false;
+    } else {
+      canDragRef.current = true;
+    }
+  }, [currentTool]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -69,8 +79,42 @@ function SchematicEditor() {
       ctx.strokeStyle = "#ddd";
       ctx.stroke();
 
-      if (leftMouse.current) {
-        ctx.save(); // Clear the canvas with transform
+      if (currentToolRef.current === "wire") {
+        // ctx.save();
+        // ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        // lmao
+        const closestGridToMouse = {
+          x:
+            (Math.round(
+              ((mousePosRef.current.x - topLeftOfSchemRef.current.x) /
+                gridSize) *
+                scale.current
+            ) *
+              gridSize) /
+            scale.current,
+          y:
+            (Math.round(
+              ((mousePosRef.current.y - topLeftOfSchemRef.current.y) /
+                gridSize) *
+                scale.current
+            ) *
+              gridSize) /
+            scale.current,
+        };
+
+        console.log("Drawing at ", closestGridToMouse);
+        ctx.moveTo(closestGridToMouse.x - 10, closestGridToMouse.y);
+        ctx.lineTo(closestGridToMouse.x + 10, closestGridToMouse.y);
+        ctx.moveTo(closestGridToMouse.x, closestGridToMouse.y - 10);
+        ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y + 10);
+        ctx.stroke();
+        // ctx.restore();
+      }
+
+      // draw selection box
+      if (leftMouse.current && canDragRef.current) {
+        ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
 
         ctx.beginPath();
@@ -133,8 +177,6 @@ function SchematicEditor() {
         x: currentPosRef.current.x + dx,
         y: currentPosRef.current.y + dy,
       };
-
-      console.log(topLeftOfSchemRef.current);
 
       if (middleMouse.current) {
         ctx.translate(dx, dy);

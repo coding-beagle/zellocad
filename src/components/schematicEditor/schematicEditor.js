@@ -12,6 +12,7 @@ function SchematicEditor() {
   const currentPosRef = useRef({ x: 0, y: 0 });
   const lastMousePosRef = useRef({ x: 0, y: 0 });
   const currentGridPosRef = useRef({ x: 0, y: 0 });
+  const selectStartPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -44,6 +45,22 @@ function SchematicEditor() {
       ctx.fill();
       ctx.save();
 
+      if (leftMouse.current) {
+        ctx.save(); // Clear the canvas with transform
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        ctx.beginPath();
+        ctx.strokeStyle = darkModeTheme.accent;
+        ctx.rect(
+          selectStartPosRef.current.x,
+          selectStartPosRef.current.y,
+          mousePosRef.current.x - selectStartPosRef.current.x,
+          mousePosRef.current.y - selectStartPosRef.current.y
+        );
+        ctx.stroke();
+        ctx.restore();
+      }
+
       for (
         let x = gridSize / scale.current;
         x < schematicWidth / scale.current - gridSize / scale.current;
@@ -60,8 +77,6 @@ function SchematicEditor() {
           ctx.lineTo(x, y + 2);
         }
       }
-
-      // ctx.moveTo(0, 0);
 
       ctx.strokeStyle = "#ddd";
       ctx.stroke();
@@ -85,12 +100,14 @@ function SchematicEditor() {
     const mousedown = (event) => {
       if (event.buttons == 1) {
         leftMouse.current = true;
+        selectStartPosRef.current = mousePosRef.current;
       }
       if (event.buttons == 4) {
         event.preventDefault();
         middleMouse.current = true;
         lastMousePosRef.current = { x: event.clientX, y: event.clientY };
       }
+      // drawGrid();
     };
 
     const mouseup = (event) => {
@@ -100,25 +117,25 @@ function SchematicEditor() {
 
     const mousemove = (event) => {
       mousePosRef.current = { x: event.clientX, y: event.clientY };
+
+      const dx = mousePosRef.current.x - lastMousePosRef.current.x;
+      const dy = mousePosRef.current.y - lastMousePosRef.current.y;
+      currentPosRef.current = {
+        x: currentPosRef.current.x + dx,
+        y: currentPosRef.current.y + dy,
+      };
+
+      currentGridPosRef.current = {
+        x: currentPosRef.current.x + dx,
+        y: currentPosRef.current.y + dy,
+      };
+
       if (middleMouse.current) {
-        const dx = mousePosRef.current.x - lastMousePosRef.current.x;
-        const dy = mousePosRef.current.y - lastMousePosRef.current.y;
-        currentPosRef.current = {
-          x: currentPosRef.current.x + dx,
-          y: currentPosRef.current.y + dy,
-        };
-
-        currentGridPosRef.current = {
-          x: currentPosRef.current.x + dx,
-          y: currentPosRef.current.y + dy,
-        };
-
         ctx.translate(dx, dy);
-
-        lastMousePosRef.current = { x: event.clientX, y: event.clientY };
-
-        drawGrid();
       }
+
+      lastMousePosRef.current = { x: event.clientX, y: event.clientY };
+      drawGrid();
     };
 
     const resizeHandler = (event) => {

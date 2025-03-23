@@ -39,28 +39,37 @@ function SchematicEditor() {
     };
     resizeCanvas();
     const ctx = canvas.getContext("2d");
-    const gridSize = 40;
+    const gridCountX = 10;
+    const gridCountY = 10;
 
     const schematicWidth = 1600;
     const schematicHeight = 900;
 
     // lmao
     const getCurrentClosestGridToMouse = () => {
+      const gridSizeX = schematicWidth / gridCountX;
+      const gridSizeY = schematicHeight / gridCountY;
+      const gridX = Math.round(
+        ((mousePosRef.current.x - topLeftOfSchemRef.current.x) / gridSizeX) *
+          scale.current
+      );
+      const gridY = Math.round(
+        ((mousePosRef.current.y - topLeftOfSchemRef.current.y) / gridSizeY) *
+          scale.current
+      );
+
       return {
-        x:
-          (Math.round(
-            ((mousePosRef.current.x - topLeftOfSchemRef.current.x) / gridSize) *
-              scale.current
-          ) *
-            gridSize) /
-          scale.current,
-        y:
-          (Math.round(
-            ((mousePosRef.current.y - topLeftOfSchemRef.current.y) / gridSize) *
-              scale.current
-          ) *
-            gridSize) /
-          scale.current,
+        x: gridX,
+        y: gridY,
+      };
+    };
+
+    const getScreenPosFromSchemGrid = (x, y) => {
+      const gridSizeX = schematicWidth / gridCountX;
+      const gridSizeY = schematicHeight / gridCountY;
+      return {
+        x: (Math.max(1, Math.min(x, gridCountX)) * gridSizeX) / scale.current,
+        y: (Math.max(1, Math.min(y, gridCountY)) * gridSizeY) / scale.current,
       };
     };
 
@@ -82,20 +91,14 @@ function SchematicEditor() {
 
       ctx.fill();
 
-      for (
-        let x = gridSize / scale.current;
-        x < schematicWidth / scale.current - gridSize / scale.current;
-        x += gridSize / scale.current
-      ) {
-        for (
-          let y = gridSize / scale.current;
-          y < schematicHeight / scale.current - gridSize / scale.current;
-          y += gridSize / scale.current
-        ) {
-          ctx.moveTo(x - 1, y);
-          ctx.lineTo(x + 1, y);
-          ctx.moveTo(x, y - 1);
-          ctx.lineTo(x, y + 1);
+      for (let x = 1; x < gridCountX; x++) {
+        for (let y = 1; y < gridCountY; y++) {
+          const gridX = (x * schematicWidth) / gridCountX / scale.current;
+          const gridY = (y * schematicHeight) / gridCountY / scale.current;
+          ctx.moveTo(gridX - 1, gridY);
+          ctx.lineTo(gridX + 1, gridY);
+          ctx.moveTo(gridX, gridY - 1);
+          ctx.lineTo(gridX, gridY + 1);
         }
       }
 
@@ -103,7 +106,11 @@ function SchematicEditor() {
       ctx.stroke();
 
       if (currentToolRef.current === "wire") {
-        const closestGridToMouse = getCurrentClosestGridToMouse();
+        const mouseGridPos = getCurrentClosestGridToMouse();
+        const closestGridToMouse = getScreenPosFromSchemGrid(
+          mouseGridPos.x,
+          mouseGridPos.y
+        );
 
         ctx.moveTo(closestGridToMouse.x - 10, closestGridToMouse.y);
         ctx.lineTo(closestGridToMouse.x + 10, closestGridToMouse.y);
@@ -112,20 +119,23 @@ function SchematicEditor() {
         ctx.stroke();
 
         if (drawingWire.current) {
-          ctx.moveTo(
+          const mouseWirePoint = getScreenPosFromSchemGrid(
             currentWirePoints.current[currentWirePoints.current.length - 1].x,
             currentWirePoints.current[currentWirePoints.current.length - 1].y
           );
+          ctx.moveTo(mouseWirePoint.x, mouseWirePoint.y);
           ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y);
           ctx.stroke();
 
           if (currentWirePoints.current.length > 1) {
-            ctx.moveTo(
+            const firstWirePoint = getScreenPosFromSchemGrid(
               currentWirePoints.current[0].x,
               currentWirePoints.current[0].y
             );
+            ctx.moveTo(firstWirePoint.x, firstWirePoint.y);
             currentWirePoints.current.forEach((point) => {
-              ctx.lineTo(point.x, point.y);
+              const pointOnScreen = getScreenPosFromSchemGrid(point.x, point.y);
+              ctx.lineTo(pointOnScreen.x, pointOnScreen.y);
             });
             ctx.stroke();
           }
@@ -137,9 +147,14 @@ function SchematicEditor() {
         ctx.beginPath();
         ctx.strokeStyle = darkModeTheme.secondaryAccent;
         wire.forEach((point) => {
-          ctx.moveTo(point[0].x, point[0].y);
+          const screenPoint = getScreenPosFromSchemGrid(point[0].x, point[0].y);
+          ctx.moveTo(screenPoint.x, screenPoint.y);
           for (let i = 1; i < point.length; i++) {
-            ctx.lineTo(point[i].x, point[i].y);
+            const screenPoint = getScreenPosFromSchemGrid(
+              point[i].x,
+              point[i].y
+            );
+            ctx.lineTo(screenPoint.x, screenPoint.y);
           }
         });
 
@@ -188,6 +203,7 @@ function SchematicEditor() {
         }
         if (drawingWire.current) {
           currentWirePoints.current.push(getCurrentClosestGridToMouse());
+          console.log(currentWirePoints.current);
         }
       }
       if (event.buttons == 4) {
@@ -259,7 +275,12 @@ function SchematicEditor() {
     window.addEventListener("keydown", handleKeyPress);
     window.addEventListener("contextmenu", handleContextMenu);
 
+    const startPadding = { x: (1920 - 1600) / 2, y: 10 };
+    currentPosRef.current = startPadding;
+    topLeftOfSchemRef.current = startPadding;
+
     drawGrid();
+    ctx.translate(startPadding.x, startPadding.y);
 
     return () => {
       window.removeEventListener("wheel", handleWheel);

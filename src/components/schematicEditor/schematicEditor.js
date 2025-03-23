@@ -19,9 +19,10 @@ function SchematicEditor() {
   const drawingWire = useRef(false);
   const wirePoints = useRef([]);
   const currentWirePoints = useRef([]);
-  const drawingGhostWire = useRef(false);
+  const selectedWiresRef = useRef([]);
 
   const [currentTool, setCurrentTool] = useState(null);
+  const [selectedWires, setSelectedWires] = useState([]);
 
   const gridCountX = 30;
   const gridCountY = 30;
@@ -38,8 +39,22 @@ function SchematicEditor() {
     }
   }, [currentTool]);
 
+  // useEffect(() => {
+  //   selectedWiresRef.current = selectedWires;
+  //   // console.log("Selected Wires: ", selectedWires);
+  // }, [selectedWires]);
+
   const clamp = (number, numMin, numMax) => {
     return number > numMax ? numMax : number < numMin ? numMin : number;
+  };
+
+  const getScreenPosFromSchemGrid = (x, y) => {
+    const gridSizeX = schematicWidth / gridCountX;
+    const gridSizeY = schematicHeight / gridCountY;
+    return {
+      x: (Math.max(1, Math.min(x, gridCountX)) * gridSizeX) / scale.current,
+      y: (Math.max(1, Math.min(y, gridCountY)) * gridSizeY) / scale.current,
+    };
   };
 
   useEffect(() => {
@@ -70,12 +85,19 @@ function SchematicEditor() {
       };
     };
 
-    const getScreenPosFromSchemGrid = (x, y) => {
+    const convertScreenPosToGrid = (x, y) => {
       const gridSizeX = schematicWidth / gridCountX;
       const gridSizeY = schematicHeight / gridCountY;
+      const gridX = Math.round(
+        ((x - topLeftOfSchemRef.current.x) / gridSizeX) * scale.current
+      );
+      const gridY = Math.round(
+        ((y - topLeftOfSchemRef.current.y) / gridSizeY) * scale.current
+      );
+
       return {
-        x: (Math.max(1, Math.min(x, gridCountX)) * gridSizeX) / scale.current,
-        y: (Math.max(1, Math.min(y, gridCountY)) * gridSizeY) / scale.current,
+        x: clamp(gridX, 1, gridCountX - 1),
+        y: clamp(gridY, 1, gridCountY - 1),
       };
     };
 
@@ -155,6 +177,26 @@ function SchematicEditor() {
 
       // Draw all wire points
       wirePoints.current.forEach((wire) => {
+        ctx.beginPath();
+        ctx.strokeStyle = darkModeTheme.text;
+        wire.forEach((point) => {
+          const screenPoint = getScreenPosFromSchemGrid(point[0].x, point[0].y);
+          ctx.moveTo(screenPoint.x, screenPoint.y);
+          for (let i = 1; i < point.length; i++) {
+            const screenPoint = getScreenPosFromSchemGrid(
+              point[i].x,
+              point[i].y
+            );
+            ctx.lineTo(screenPoint.x, screenPoint.y);
+          }
+        });
+
+        ctx.stroke();
+      });
+
+      // draw selectedWires again
+      selectedWiresRef.current.forEach((wire) => {
+        console.log("wire: ", wire);
         ctx.beginPath();
         ctx.strokeStyle = darkModeTheme.secondaryAccent;
         wire.forEach((point) => {
@@ -255,6 +297,30 @@ function SchematicEditor() {
     const mouseup = (event) => {
       middleMouse.current = false;
       leftMouse.current = false;
+
+      if (canDragRef.current) {
+        const selectionBoxInGrid = convertScreenPosToGrid(
+          mousePosRef.current.x,
+          mousePosRef.current.y
+        );
+
+        const selectStartPosRefInGrid = convertScreenPosToGrid(
+          selectStartPosRef.current.x,
+          selectStartPosRef.current.y
+        );
+
+        const selectionBox = {
+          x: selectStartPosRefInGrid.x,
+          y: selectStartPosRefInGrid.y,
+          width: selectionBoxInGrid.x - selectStartPosRefInGrid.x,
+          height: selectionBoxInGrid.y - selectStartPosRefInGrid.y,
+        };
+
+        const newSelectedWires = wirePoints.current.filter((wire) => {
+          isWireInSelection(wire, selectionBox);
+        });
+      }
+
       drawGrid();
     };
 
@@ -282,7 +348,7 @@ function SchematicEditor() {
       }
 
       lastMousePosRef.current = { x: event.clientX, y: event.clientY };
-      drawGrid();
+      drawGrid(); // might need to optimise to decide when we can redraw the grid
     };
 
     const resizeHandler = (event) => {
@@ -328,6 +394,31 @@ function SchematicEditor() {
       window.removeEventListener("contextmenu", handleContextMenu);
     };
   }, []);
+
+  const isWireInSelection = (wire, selectionBox) => {
+    selectedWiresRef.current = [];
+    wire.forEach((wireSet) => {
+      wireSet.forEach((point) => {
+        const normalizedSelectionBox = {
+          x: Math.min(selectionBox.x, selectionBox.x + selectionBox.width),
+          y: Math.min(selectionBox.y, selectionBox.y + selectionBox.height),
+          width: Math.abs(selectionBox.width),
+          height: Math.abs(selectionBox.height),
+        };
+
+        if (
+          point.x > normalizedSelectionBox.x &&
+          point.x < normalizedSelectionBox.x + normalizedSelectionBox.width &&
+          point.y > normalizedSelectionBox.y &&
+          point.y < normalizedSelectionBox.y + normalizedSelectionBox.height
+        ) {
+          if (!selectedWiresRef.current.includes(wireSet)) {
+            selectedWiresRef.current.push([wireSet]);
+          }
+        }
+      });
+    });
+  };
 
   return (
     <div>

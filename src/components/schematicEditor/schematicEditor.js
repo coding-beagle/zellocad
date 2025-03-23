@@ -23,6 +23,12 @@ function SchematicEditor() {
 
   const [currentTool, setCurrentTool] = useState(null);
 
+  const gridCountX = 30;
+  const gridCountY = 30;
+
+  const schematicWidth = 1600;
+  const schematicHeight = 900;
+
   useEffect(() => {
     currentToolRef.current = currentTool;
     if (currentTool) {
@@ -40,11 +46,6 @@ function SchematicEditor() {
     };
     resizeCanvas();
     const ctx = canvas.getContext("2d");
-    const gridCountX = 10;
-    const gridCountY = 10;
-
-    const schematicWidth = 1600;
-    const schematicHeight = 900;
 
     // lmao
     const getCurrentClosestGridToMouse = () => {

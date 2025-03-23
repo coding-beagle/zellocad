@@ -19,6 +19,7 @@ function SchematicEditor() {
   const drawingWire = useRef(false);
   const wirePoints = useRef([]);
   const currentWirePoints = useRef([]);
+  const drawingGhostWire = useRef(false);
 
   const [currentTool, setCurrentTool] = useState(null);
 
@@ -124,6 +125,11 @@ function SchematicEditor() {
             currentWirePoints.current[currentWirePoints.current.length - 1].y
           );
           ctx.moveTo(mouseWirePoint.x, mouseWirePoint.y);
+
+          // this is probably fine but do we want to also make it constrain on the Y axis as well?
+          if (closestGridToMouse.x != mouseWirePoint.x) {
+            ctx.lineTo(closestGridToMouse.x, mouseWirePoint.y);
+          }
           ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y);
           ctx.stroke();
 
@@ -202,8 +208,26 @@ function SchematicEditor() {
           drawingWire.current = true;
         }
         if (drawingWire.current) {
-          currentWirePoints.current.push(getCurrentClosestGridToMouse());
-          console.log(currentWirePoints.current);
+          if (currentWirePoints.current.length > 0) {
+            const currentMousePos = getCurrentClosestGridToMouse();
+            const lastPoint =
+              currentWirePoints.current[currentWirePoints.current.length - 1];
+            console.log(currentMousePos);
+            if (currentMousePos.x != lastPoint.x) {
+              currentWirePoints.current.push({
+                x: currentMousePos.x,
+                y: lastPoint.y,
+              });
+              currentWirePoints.current.push({
+                x: currentMousePos.x,
+                y: currentMousePos.y,
+              });
+            } else {
+              currentWirePoints.current.push(getCurrentClosestGridToMouse());
+            }
+          } else {
+            currentWirePoints.current.push(getCurrentClosestGridToMouse());
+          }
         }
       }
       if (event.buttons == 4) {
@@ -263,6 +287,13 @@ function SchematicEditor() {
 
     const handleKeyPress = (event) => {
       if (event.key === "Escape") {
+        if (currentToolRef.current === "wire") {
+          if (currentWirePoints.current.length > 0) {
+            wirePoints.current.push([currentWirePoints.current]);
+          }
+          currentWirePoints.current = [];
+          drawingWire.current = false;
+        }
         setCurrentTool(null);
       }
     };

@@ -178,7 +178,7 @@ function SchematicEditor() {
       // Draw all wire points
       wirePoints.current.forEach((wire) => {
         ctx.beginPath();
-        ctx.strokeStyle = darkModeTheme.text;
+        ctx.strokeStyle = darkModeTheme.secondaryAccent;
         wire.forEach((point) => {
           const screenPoint = getScreenPosFromSchemGrid(point[0].x, point[0].y);
           ctx.moveTo(screenPoint.x, screenPoint.y);
@@ -196,9 +196,8 @@ function SchematicEditor() {
 
       // draw selectedWires again
       selectedWiresRef.current.forEach((wire) => {
-        console.log("wire: ", wire);
         ctx.beginPath();
-        ctx.strokeStyle = darkModeTheme.secondaryAccent;
+        ctx.strokeStyle = darkModeTheme.accent;
         wire.forEach((point) => {
           const screenPoint = getScreenPosFromSchemGrid(point[0].x, point[0].y);
           ctx.moveTo(screenPoint.x, screenPoint.y);
@@ -316,9 +315,7 @@ function SchematicEditor() {
           height: selectionBoxInGrid.y - selectStartPosRefInGrid.y,
         };
 
-        const newSelectedWires = wirePoints.current.filter((wire) => {
-          isWireInSelection(wire, selectionBox);
-        });
+        isWireInSelection(wirePoints.current, selectionBox); // set the selectedWiresRef
       }
 
       drawGrid();
@@ -398,7 +395,7 @@ function SchematicEditor() {
   const isWireInSelection = (wire, selectionBox) => {
     selectedWiresRef.current = [];
     wire.forEach((wireSet) => {
-      wireSet.forEach((point) => {
+      wireSet[0].forEach((point) => {
         const normalizedSelectionBox = {
           x: Math.min(selectionBox.x, selectionBox.x + selectionBox.width),
           y: Math.min(selectionBox.y, selectionBox.y + selectionBox.height),
@@ -413,7 +410,7 @@ function SchematicEditor() {
           point.y < normalizedSelectionBox.y + normalizedSelectionBox.height
         ) {
           if (!selectedWiresRef.current.includes(wireSet)) {
-            selectedWiresRef.current.push([wireSet]);
+            selectedWiresRef.current.push([wireSet[0]]);
           }
         }
       });

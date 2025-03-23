@@ -38,6 +38,10 @@ function SchematicEditor() {
     }
   }, [currentTool]);
 
+  const clamp = (number, numMin, numMax) => {
+    return number > numMax ? numMax : number < numMin ? numMin : number;
+  };
+
   useEffect(() => {
     const canvas = canvasRef.current;
     const resizeCanvas = () => {
@@ -61,8 +65,8 @@ function SchematicEditor() {
       );
 
       return {
-        x: gridX,
-        y: gridY,
+        x: clamp(gridX, 1, gridCountX - 1),
+        y: clamp(gridY, 1, gridCountY - 1),
       };
     };
 

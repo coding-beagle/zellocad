@@ -364,6 +364,16 @@ function SchematicEditor() {
         }
         setCurrentTool(null);
       }
+      if (event.key === "Delete") {
+        wirePoints.current.forEach((wire) => {
+          selectedWiresRef.current.forEach((selectedWire) => {
+            if (selectedWire === wire) {
+              wirePoints.current = wirePoints.current.filter((w) => w !== wire);
+            }
+          });
+        });
+        selectedWiresRef.current = [];
+      }
     };
 
     window.addEventListener("wheel", handleWheel);

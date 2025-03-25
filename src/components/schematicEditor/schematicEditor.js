@@ -188,16 +188,14 @@ function SchematicEditor() {
         const firstPoint = wire[0];
         const lastPoint = wire[wire.length - 1];
 
+        // this could be better, we need to check that the wire loops back on itself correctly
+        // as well as checking if the wire intersects any other wire / lands back on another wire
         const isUniquePoint = (point) => {
           return !wirePoints.current.some((otherWire) => {
-            // if (otherWire === wire) return false; // Skip the current wire
-            const otherFirstPoint = otherWire[0];
-            const otherLastPoint = otherWire[otherWire.length - 1];
-            return (
-              (point.x === otherFirstPoint.x &&
-                point.y === otherFirstPoint.y) ||
-              (point.x === otherLastPoint.x && point.y === otherLastPoint.y)
-            );
+            if (otherWire === wire) return false;
+            return otherWire.some((otherPoint) => {
+              return point.x === otherPoint.x && point.y === otherPoint.y;
+            });
           });
         };
 

@@ -20,6 +20,7 @@ function SchematicEditor() {
   const wirePoints = useRef([]);
   const currentWirePoints = useRef([]);
   const selectedWiresRef = useRef([]);
+  const constrainedDrawnWireToYAxis = useRef(false);
 
   const [currentTool, setCurrentTool] = useState(null);
   const [selectedWires, setSelectedWires] = useState([]);
@@ -61,25 +62,6 @@ function SchematicEditor() {
     resizeCanvas();
     const ctx = canvas.getContext("2d");
 
-    // lmao
-    const getCurrentClosestGridToMouse = () => {
-      const gridSizeX = schematicWidth / gridCountX;
-      const gridSizeY = schematicHeight / gridCountY;
-      const gridX = Math.round(
-        ((mousePosRef.current.x - topLeftOfSchemRef.current.x) / gridSizeX) *
-          scale.current
-      );
-      const gridY = Math.round(
-        ((mousePosRef.current.y - topLeftOfSchemRef.current.y) / gridSizeY) *
-          scale.current
-      );
-
-      return {
-        x: clamp(gridX, 1, gridCountX - 1),
-        y: clamp(gridY, 1, gridCountY - 1),
-      };
-    };
-
     const convertScreenPosToGrid = (x, y) => {
       const gridSizeX = schematicWidth / gridCountX;
       const gridSizeY = schematicHeight / gridCountY;
@@ -94,6 +76,13 @@ function SchematicEditor() {
         x: clamp(gridX, 1, gridCountX - 1),
         y: clamp(gridY, 1, gridCountY - 1),
       };
+    };
+
+    const getCurrentClosestGridToMouse = () => {
+      return convertScreenPosToGrid(
+        mousePosRef.current.x,
+        mousePosRef.current.y
+      );
     };
 
     const drawGrid = () => {
@@ -141,6 +130,7 @@ function SchematicEditor() {
         ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y + 10);
         ctx.stroke();
 
+        // drawing ghost wire
         if (drawingWire.current) {
           const mouseWirePoint = getScreenPosFromSchemGrid(
             currentWirePoints.current[currentWirePoints.current.length - 1].x,
@@ -149,11 +139,23 @@ function SchematicEditor() {
           ctx.moveTo(mouseWirePoint.x, mouseWirePoint.y);
 
           // this is probably fine but do we want to also make it constrain on the Y axis as well?
-          if (closestGridToMouse.x != mouseWirePoint.x) {
+          if (
+            closestGridToMouse.x != mouseWirePoint.x &&
+            !constrainedDrawnWireToYAxis.current
+          ) {
             ctx.lineTo(closestGridToMouse.x, mouseWirePoint.y);
+          } else {
+            ctx.lineTo(mouseWirePoint.x, closestGridToMouse.y);
           }
           ctx.lineTo(closestGridToMouse.x, closestGridToMouse.y);
           ctx.stroke();
+
+          if (closestGridToMouse.x == mouseWirePoint.x) {
+            constrainedDrawnWireToYAxis.current = true;
+          }
+          if (closestGridToMouse.y == mouseWirePoint.y) {
+            constrainedDrawnWireToYAxis.current = false;
+          }
 
           if (currentWirePoints.current.length > 1) {
             const firstWirePoint = getScreenPosFromSchemGrid(
@@ -242,10 +244,25 @@ function SchematicEditor() {
             const lastPoint =
               currentWirePoints.current[currentWirePoints.current.length - 1];
 
-            if (currentMousePos.x != lastPoint.x) {
+            if (
+              currentMousePos.x != lastPoint.x &&
+              !constrainedDrawnWireToYAxis.current
+            ) {
               currentWirePoints.current.push({
                 x: currentMousePos.x,
                 y: lastPoint.y,
+              });
+              currentWirePoints.current.push({
+                x: currentMousePos.x,
+                y: currentMousePos.y,
+              });
+            } else if (
+              currentMousePos.x != lastPoint.x &&
+              constrainedDrawnWireToYAxis.current
+            ) {
+              currentWirePoints.current.push({
+                x: lastPoint.x,
+                y: currentMousePos.y,
               });
               currentWirePoints.current.push({
                 x: currentMousePos.x,

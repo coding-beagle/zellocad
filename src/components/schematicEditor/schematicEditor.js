@@ -176,13 +176,48 @@ function SchematicEditor() {
       wirePoints.current.forEach((wire) => {
         ctx.beginPath();
         ctx.strokeStyle = darkModeTheme.secondaryAccent;
-        const firstPoint = getScreenPosFromSchemGrid(wire[0].x, wire[0].y);
-        ctx.moveTo(firstPoint.x, firstPoint.y);
+        const wireStart = getScreenPosFromSchemGrid(wire[0].x, wire[0].y);
+        ctx.moveTo(wireStart.x, wireStart.y);
         wire.forEach((point) => {
           const screenPoint = getScreenPosFromSchemGrid(point.x, point.y);
           ctx.lineTo(screenPoint.x, screenPoint.y);
         });
         ctx.stroke();
+
+        // Check for the first and last points in the wire
+        const firstPoint = wire[0];
+        const lastPoint = wire[wire.length - 1];
+
+        const isUniquePoint = (point) => {
+          return !wirePoints.current.some((otherWire) => {
+            // if (otherWire === wire) return false; // Skip the current wire
+            const otherFirstPoint = otherWire[0];
+            const otherLastPoint = otherWire[otherWire.length - 1];
+            return (
+              (point.x === otherFirstPoint.x &&
+                point.y === otherFirstPoint.y) ||
+              (point.x === otherLastPoint.x && point.y === otherLastPoint.y)
+            );
+          });
+        };
+
+        if (isUniquePoint(firstPoint)) {
+          const screenFirstPoint = getScreenPosFromSchemGrid(
+            firstPoint.x,
+            firstPoint.y
+          );
+          ctx.fillStyle = darkModeTheme.accent;
+          ctx.fillRect(screenFirstPoint.x - 3, screenFirstPoint.y - 3, 6, 6);
+        }
+
+        if (isUniquePoint(lastPoint)) {
+          const screenLastPoint = getScreenPosFromSchemGrid(
+            lastPoint.x,
+            lastPoint.y
+          );
+          ctx.fillStyle = darkModeTheme.accent;
+          ctx.fillRect(screenLastPoint.x - 3, screenLastPoint.y - 3, 6, 6);
+        }
       });
 
       // draw selectedWires again

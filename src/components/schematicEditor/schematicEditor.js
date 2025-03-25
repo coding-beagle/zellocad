@@ -63,15 +63,21 @@ function SchematicEditor() {
     resizeCanvas();
     const ctx = canvas.getContext("2d");
 
-    const convertScreenPosToGrid = (x, y) => {
+    const convertScreenPosToGrid = (x, y, round = true) => {
       const gridSizeX = schematicWidth / gridCountX;
       const gridSizeY = schematicHeight / gridCountY;
-      const gridX = Math.round(
-        ((x - topLeftOfSchemRef.current.x) / gridSizeX) * scale.current
-      );
-      const gridY = Math.round(
-        ((y - topLeftOfSchemRef.current.y) / gridSizeY) * scale.current
-      );
+      let gridX, gridY;
+      if (round) {
+        gridX = Math.round(
+          ((x - topLeftOfSchemRef.current.x) / gridSizeX) * scale.current
+        );
+        gridY = Math.round(
+          ((y - topLeftOfSchemRef.current.y) / gridSizeY) * scale.current
+        );
+      } else {
+        gridX = ((x - topLeftOfSchemRef.current.x) / gridSizeX) * scale.current;
+        gridY = ((y - topLeftOfSchemRef.current.y) / gridSizeY) * scale.current;
+      }
 
       return {
         x: clamp(gridX, 1, gridCountX - 1),
@@ -79,10 +85,11 @@ function SchematicEditor() {
       };
     };
 
-    const getCurrentClosestGridToMouse = () => {
+    const getCurrentClosestGridToMouse = (round = true) => {
       return convertScreenPosToGrid(
         mousePosRef.current.x,
-        mousePosRef.current.y
+        mousePosRef.current.y,
+        round
       );
     };
 
@@ -387,20 +394,23 @@ function SchematicEditor() {
       }
 
       if (currentToolRef.current === null && leftMouse.current) {
-        const mouseGridPos = getCurrentClosestGridToMouse();
-
-        // const changeInMouseGridPos = convertScreenPosToGrid(dx, dy);
+        const mouseGridPos = getCurrentClosestGridToMouse(false);
+        const mouseGridPosRounded = getCurrentClosestGridToMouse();
 
         wirePoints.current.forEach((wire) => {
-          wire.forEach((point) => {
-            if (point.x === mouseGridPos.x && point.y === mouseGridPos.y) {
+          wire.some((point) => {
+            if (
+              Math.abs(point.x - mouseGridPos.x) < 1.5 &&
+              Math.abs(point.y - mouseGridPos.y) < 1.5
+            ) {
               draggingWirePoint.current = true;
-              // console.log(dx / (schematicWidth / gridCountX));
-              if (Math.abs(dx / (schematicWidth / gridCountX)) > 0.05) {
-                point.x += Math.sign(dx / (schematicWidth / gridCountX));
+
+              if (Math.abs(dx / (schematicWidth / gridCountX)) > 0.01) {
+                point.x = mouseGridPosRounded.x;
               }
-              if (Math.abs(dy / (schematicHeight / gridCountY)) > 0.05) {
-                point.y += Math.sign(dy / (schematicHeight / gridCountY));
+
+              if (Math.abs(dy / (schematicHeight / gridCountY)) > 0.01) {
+                point.y = mouseGridPosRounded.y;
               }
             }
           });

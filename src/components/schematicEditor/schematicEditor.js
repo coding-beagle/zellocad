@@ -21,6 +21,7 @@ function SchematicEditor() {
   const currentWirePoints = useRef([]);
   const selectedWiresRef = useRef([]);
   const constrainedDrawnWireToYAxis = useRef(false);
+  const draggingWirePoint = useRef(false);
 
   const [currentTool, setCurrentTool] = useState(null);
   const [selectedWires, setSelectedWires] = useState([]);
@@ -232,7 +233,11 @@ function SchematicEditor() {
       });
 
       // draw selection box
-      if (leftMouse.current && canDragRef.current) {
+      if (
+        leftMouse.current &&
+        canDragRef.current &&
+        !draggingWirePoint.current
+      ) {
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0);
 
@@ -351,6 +356,10 @@ function SchematicEditor() {
         isWireInSelection(wirePoints.current, selectionBox); // set the selectedWiresRef
       }
 
+      if (draggingWirePoint.current) {
+        draggingWirePoint.current = false;
+      }
+
       drawGrid();
     };
 
@@ -375,6 +384,27 @@ function SchematicEditor() {
           x: topLeftOfSchemRef.current.x + dx,
           y: topLeftOfSchemRef.current.y + dy,
         };
+      }
+
+      if (currentToolRef.current === null && leftMouse.current) {
+        const mouseGridPos = getCurrentClosestGridToMouse();
+
+        // const changeInMouseGridPos = convertScreenPosToGrid(dx, dy);
+
+        wirePoints.current.forEach((wire) => {
+          wire.forEach((point) => {
+            if (point.x === mouseGridPos.x && point.y === mouseGridPos.y) {
+              draggingWirePoint.current = true;
+              // console.log(dx / (schematicWidth / gridCountX));
+              if (Math.abs(dx / (schematicWidth / gridCountX)) > 0.05) {
+                point.x += Math.sign(dx / (schematicWidth / gridCountX));
+              }
+              if (Math.abs(dy / (schematicHeight / gridCountY)) > 0.05) {
+                point.y += Math.sign(dy / (schematicHeight / gridCountY));
+              }
+            }
+          });
+        });
       }
 
       lastMousePosRef.current = { x: event.clientX, y: event.clientY };

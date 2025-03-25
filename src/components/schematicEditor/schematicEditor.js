@@ -276,6 +276,9 @@ function SchematicEditor() {
       drawGrid();
     };
 
+    // need to change selection behaviour so that we can't drag wires whilst selecting, etc
+    // also refactor the wire click detection to here instead of mousemove makes sense, mousemove should only handle the dragging wire
+    // logic
     const mousedown = (event) => {
       if (event.buttons == 1) {
         leftMouse.current = true;

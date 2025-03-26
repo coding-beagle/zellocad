@@ -22,6 +22,7 @@ function SchematicEditor() {
   const selectedWiresRef = useRef([]);
   const constrainedDrawnWireToYAxis = useRef(false);
   const draggingWirePoint = useRef(false);
+  const isDraggingRef = useRef(false);
 
   const [currentTool, setCurrentTool] = useState(null);
   const [selectedWires, setSelectedWires] = useState([]);
@@ -242,7 +243,7 @@ function SchematicEditor() {
       // draw selection box
       if (
         leftMouse.current &&
-        canDragRef.current &&
+        isDraggingRef.current &&
         !draggingWirePoint.current
       ) {
         ctx.save();
@@ -282,7 +283,24 @@ function SchematicEditor() {
     const mousedown = (event) => {
       if (event.buttons == 1) {
         leftMouse.current = true;
-        selectStartPosRef.current = mousePosRef.current;
+        const mouseGridPos = getCurrentClosestGridToMouse(false);
+        if (
+          wirePoints.current.some((wire) =>
+            wire.some(
+              (point) =>
+                Math.abs(point.x - mouseGridPos.x) < 1.5 &&
+                Math.abs(point.y - mouseGridPos.y) < 1.5
+            )
+          )
+        ) {
+          canDragRef.current = false;
+          isDraggingRef.current = false;
+          draggingWirePoint.current = true;
+        }
+        if (canDragRef.current) {
+          selectStartPosRef.current = mousePosRef.current;
+          isDraggingRef.current = true;
+        }
         if (currentToolRef.current === "wire" && !drawingWire.current) {
           drawingWire.current = true;
         }
@@ -345,7 +363,9 @@ function SchematicEditor() {
       middleMouse.current = false;
       leftMouse.current = false;
 
-      if (canDragRef.current) {
+      if (isDraggingRef.current) {
+        canDragRef.current = true;
+        isDraggingRef.current = false;
         const selectionBoxInGrid = convertScreenPosToGrid(
           mousePosRef.current.x,
           mousePosRef.current.y
@@ -365,6 +385,9 @@ function SchematicEditor() {
 
         isWireInSelection(wirePoints.current, selectionBox); // set the selectedWiresRef
       }
+
+      canDragRef.current = true;
+      isDraggingRef.current = false;
 
       if (draggingWirePoint.current) {
         draggingWirePoint.current = false;
@@ -396,7 +419,13 @@ function SchematicEditor() {
         };
       }
 
-      if (currentToolRef.current === null && leftMouse.current) {
+      console.log(draggingWirePoint.current);
+
+      if (
+        currentToolRef.current === null &&
+        leftMouse.current &&
+        draggingWirePoint.current
+      ) {
         const mouseGridPos = getCurrentClosestGridToMouse(false);
         const mouseGridPosRounded = getCurrentClosestGridToMouse();
 
@@ -406,8 +435,6 @@ function SchematicEditor() {
               Math.abs(point.x - mouseGridPos.x) < 1.5 &&
               Math.abs(point.y - mouseGridPos.y) < 1.5
             ) {
-              draggingWirePoint.current = true;
-
               if (Math.abs(dx / (schematicWidth / gridCountX)) > 0.01) {
                 point.x = mouseGridPosRounded.x;
               }

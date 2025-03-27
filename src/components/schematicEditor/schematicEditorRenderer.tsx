@@ -13,6 +13,8 @@ interface SchematicGridProps {
   scale?: number;
   canvasWidth?: number;
   canvasHeight?: number;
+  initialTransformX?: number;
+  initialTransformY?: number;
 }
 
 class SchematicGridRenderer {
@@ -41,12 +43,18 @@ class SchematicGridRenderer {
       scale = 1,
       canvasWidth,
       canvasHeight,
+      initialTransformX = (canvasWidth - width) / 4, // make sure schematic starts in the middle
+      initialTransformY = (canvasHeight - height) / 4,
     } = props;
     this.gridSizePx = { x: width, y: height };
     this.gridRowColumns = { rows: rows, columns: columns };
     this.scale = scale;
     this.ctx = ctx;
     this.canvasSize = { x: canvasWidth, y: canvasHeight };
+    this.currentTransform = { x: initialTransformX, y: initialTransformY };
+
+    this.drawGrid();
+    this.ctx.translate(this.currentTransform.x, this.currentTransform.y);
   }
 
   clearGrid() {
@@ -174,6 +182,22 @@ class SchematicGridRenderer {
       default:
         return;
     }
+  }
+
+  handleWheel(e: React.WheelEvent<HTMLCanvasElement>) {
+    e.preventDefault();
+    const { deltaX, deltaY } = e;
+
+    const zoomIntensity = 0.1;
+    const zoom = Math.exp((deltaY * zoomIntensity) / 100);
+
+    if (this.scale * zoom > 5 || this.scale * zoom < 0.2) {
+      return;
+    }
+
+    this.scale *= zoom;
+
+    this.drawGrid();
   }
 }
 

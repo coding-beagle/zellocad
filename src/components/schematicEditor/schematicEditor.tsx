@@ -10,8 +10,6 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
   rows,
   columns,
   scale = 1,
-  canvasHeight = 1920,
-  canvasWidth = 1080,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<SchematicGridRenderer | null>(null);
@@ -26,6 +24,10 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
 
   const handleMouseUp = (e: React.MouseEvent<HTMLCanvasElement>) => {
     rendererRef.current.mouseUp(e);
+  };
+
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    rendererRef.current.handleWheel(e);
   };
 
   useEffect(() => {
@@ -64,6 +66,7 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
       onMouseMove={handleMouseMove}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
+      onWheel={handleWheel}
       style={{
         border: "none",
         backgroundColor: darkModeTheme.primary,

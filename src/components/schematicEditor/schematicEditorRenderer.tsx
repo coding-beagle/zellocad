@@ -4,6 +4,7 @@
 // elements that need to be rendered.
 
 import { darkModeTheme } from "../themeManager/themes";
+import { SchematicElement } from "./schematicElement";
 
 interface SchematicGridProps {
   width: number;
@@ -19,6 +20,7 @@ interface SchematicGridProps {
 
 class SchematicGridRenderer {
   ctx: CanvasRenderingContext2D;
+  elements: SchematicElement[];
 
   // schematic meta stuff
   gridSizePx: { x: number; y: number };
@@ -39,7 +41,11 @@ class SchematicGridRenderer {
   selectionStart: { x: number; y: number } | null = null;
   selectionEnd: { x: number; y: number } | null = null;
 
-  constructor(ctx: CanvasRenderingContext2D, props: SchematicGridProps) {
+  constructor(
+    ctx: CanvasRenderingContext2D,
+    elements: SchematicElement[],
+    props: SchematicGridProps
+  ) {
     const {
       width,
       height,
@@ -57,6 +63,7 @@ class SchematicGridRenderer {
     this.ctx = ctx;
     this.canvasSize = { x: canvasWidth, y: canvasHeight };
     this.currentTransform = { x: initialTransformX, y: initialTransformY };
+    this.elements = elements;
 
     this.drawGrid();
     this.ctx.translate(this.currentTransform.x, this.currentTransform.y);
@@ -103,6 +110,9 @@ class SchematicGridRenderer {
   drawGrid() {
     this.clearGrid();
     this.drawSchematicSheet();
+
+    this.elements.forEach((element) => element.draw());
+
     this.drawSelectionBox(); // Add selection box rendering
   }
 

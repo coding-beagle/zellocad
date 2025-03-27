@@ -14,6 +14,7 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<SchematicGridRenderer | null>(null);
+  const elements = useRef([]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     rendererRef.current.mouseMove(e);
@@ -38,12 +39,13 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
   useEffect(() => {
     const canvas = canvasRef.current;
     const renderer = rendererRef.current;
+    const currentElements = elements.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const gridRenderer = new SchematicGridRenderer(ctx, {
+    const gridRenderer = new SchematicGridRenderer(ctx, currentElements, {
       width,
       height,
       rows,

@@ -1,7 +1,12 @@
 import { faCodeBranch, faXmark } from "@fortawesome/free-solid-svg-icons";
 import ToolSelectorTool from "./toolSelectorTool";
 
-function ToolSelector({ currentTool, setCurrentTool }) {
+interface ToolSelectorProps {
+  currentTool: string;
+  setCurrentTool: (tool: string) => void;
+}
+
+function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
   return (
     <div
       style={{

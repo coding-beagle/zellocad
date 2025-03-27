@@ -42,11 +42,11 @@ function SchematicEditor() {
     }
   }, [currentTool]);
 
-  const clamp = (number, numMin, numMax) => {
+  const clamp = (number: number, numMin: number, numMax: number) => {
     return number > numMax ? numMax : number < numMin ? numMin : number;
   };
 
-  const getScreenPosFromSchemGrid = (x, y) => {
+  const getScreenPosFromSchemGrid = (x: number, y: number) => {
     const gridSizeX = schematicWidth / gridCountX;
     const gridSizeY = schematicHeight / gridCountY;
     return {
@@ -57,6 +57,9 @@ function SchematicEditor() {
 
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
@@ -64,7 +67,11 @@ function SchematicEditor() {
     resizeCanvas();
     const ctx = canvas.getContext("2d");
 
-    const convertScreenPosToGrid = (x, y, round = true) => {
+    const convertScreenPosToGrid = (
+      x: number,
+      y: number,
+      round: boolean = true
+    ) => {
       const gridSizeX = schematicWidth / gridCountX;
       const gridSizeY = schematicHeight / gridCountY;
       let gridX, gridY;
@@ -418,8 +425,6 @@ function SchematicEditor() {
           y: topLeftOfSchemRef.current.y + dy,
         };
       }
-
-      console.log(draggingWirePoint.current);
 
       if (
         currentToolRef.current === null &&

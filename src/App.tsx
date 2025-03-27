@@ -16,7 +16,7 @@ function App() {
         overflow: "hidden",
       }}
     >
-      <SchematicEditor />
+      <SchematicEditor width={1600} height={900} rows={30} columns={30} />
     </div>
   );
 }

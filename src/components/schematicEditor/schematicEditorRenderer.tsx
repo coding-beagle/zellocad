@@ -34,6 +34,11 @@ class SchematicGridRenderer {
   rightMouse: boolean = false;
   middleMouse: boolean = false;
 
+  // Selection box properties
+  isSelecting: boolean = false;
+  selectionStart: { x: number; y: number } | null = null;
+  selectionEnd: { x: number; y: number } | null = null;
+
   constructor(ctx: CanvasRenderingContext2D, props: SchematicGridProps) {
     const {
       width,
@@ -98,6 +103,25 @@ class SchematicGridRenderer {
   drawGrid() {
     this.clearGrid();
     this.drawSchematicSheet();
+    this.drawSelectionBox(); // Add selection box rendering
+  }
+
+  drawSelectionBox() {
+    this.ctx.save();
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+    if (this.isSelecting && this.selectionStart && this.selectionEnd) {
+      const startX = Math.min(this.selectionStart.x, this.selectionEnd.x);
+      const startY = Math.min(this.selectionStart.y, this.selectionEnd.y);
+      const width = Math.abs(this.selectionEnd.x - this.selectionStart.x);
+      const height = Math.abs(this.selectionEnd.y - this.selectionStart.y);
+
+      this.ctx.save();
+      this.ctx.strokeStyle = darkModeTheme.accent;
+      this.ctx.setLineDash([5, 5]);
+      this.ctx.strokeRect(startX, startY, width, height);
+      this.ctx.restore();
+    }
+    this.ctx.restore();
   }
 
   getScreenPosFromSchemGrid(x: number, y: number): { x: number; y: number };
@@ -136,6 +160,81 @@ class SchematicGridRenderer {
     }
   }
 
+  clamp = (number: number, numMin: number, numMax: number) => {
+    return number > numMax ? numMax : number < numMin ? numMin : number;
+  };
+
+  getGridPosFromScreenCoords(
+    x: number,
+    y: number,
+    round: boolean = true,
+    clamp: boolean = true
+  ) {
+    const gridSizeX = this.gridSizePx.x / this.gridRowColumns.rows;
+    const gridSizeY = this.gridSizePx.y / this.gridRowColumns.columns;
+    let gridX, gridY;
+    if (round) {
+      gridX = Math.round(
+        ((x - this.currentTransform.x) / gridSizeX) * this.scale
+      );
+      gridY = Math.round(
+        ((y - this.currentTransform.y) / gridSizeY) * this.scale
+      );
+    } else {
+      gridX = ((x - this.currentTransform.x) / gridSizeX) * this.scale;
+      gridY = ((y - this.currentTransform.y) / gridSizeY) * this.scale;
+    }
+
+    if (clamp) {
+      return {
+        x: this.clamp(gridX, 1, this.gridRowColumns.rows - 1),
+        y: this.clamp(gridY, 1, this.gridRowColumns.columns - 1),
+      };
+    }
+    return {
+      x: gridX,
+      y: gridY,
+    };
+  }
+
+  // handles the case where we start dragging from right and select left!
+  normalizeSelectionBox() {
+    const selectionCorner1 = this.getGridPosFromScreenCoords(
+      this.selectionStart.x,
+      this.selectionStart.y,
+      false
+    );
+    const selectionCorner2 = this.getGridPosFromScreenCoords(
+      this.selectionEnd.x,
+      this.selectionEnd.y,
+      false
+    );
+
+    return {
+      x1:
+        selectionCorner1.x < selectionCorner2.x
+          ? selectionCorner1.x
+          : selectionCorner2.x,
+      y1:
+        selectionCorner1.y < selectionCorner2.y
+          ? selectionCorner1.y
+          : selectionCorner2.y,
+      x2:
+        selectionCorner1.x > selectionCorner2.x
+          ? selectionCorner1.x
+          : selectionCorner2.x,
+      y2:
+        selectionCorner1.y > selectionCorner2.y
+          ? selectionCorner1.y
+          : selectionCorner2.y,
+    };
+  }
+
+  resolveSelection() {
+    const selectionBox = this.normalizeSelectionBox();
+    console.log(selectionBox);
+  }
+
   mouseMove(e: React.MouseEvent<HTMLCanvasElement>) {
     this.currentMousePos = { x: e.clientX, y: e.clientY };
 
@@ -143,17 +242,27 @@ class SchematicGridRenderer {
     const dy = this.currentMousePos.y - this.lastMousePos.y;
 
     if (this.middleMouse) {
+      this.currentTransform.x += dx;
+      this.currentTransform.y += dy;
       this.ctx.translate(dx, dy);
+      this.drawGrid();
+    }
+
+    if (this.isSelecting && this.selectionStart) {
+      this.selectionEnd = { x: e.clientX, y: e.clientY };
+      this.drawGrid();
     }
 
     this.lastMousePos = { x: e.clientX, y: e.clientY };
-    this.drawGrid();
   }
 
   mouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
     switch (e.buttons) {
       case 1:
         this.leftMouse = true;
+        this.isSelecting = true;
+        this.selectionStart = { x: e.clientX, y: e.clientY };
+        this.selectionEnd = { x: e.clientX, y: e.clientY };
         break;
       case 2:
         this.rightMouse = true;
@@ -171,6 +280,12 @@ class SchematicGridRenderer {
     switch (e.button) {
       case 0:
         this.leftMouse = false;
+        if (this.isSelecting) {
+          this.resolveSelection();
+          this.isSelecting = false;
+          this.selectionStart = null;
+          this.selectionEnd = null;
+        }
         break;
       case 2:
         this.rightMouse = false;
@@ -182,6 +297,7 @@ class SchematicGridRenderer {
       default:
         return;
     }
+    this.drawGrid();
   }
 
   handleWheel(e: React.WheelEvent<HTMLCanvasElement>) {
@@ -198,6 +314,10 @@ class SchematicGridRenderer {
     this.scale *= zoom;
 
     this.drawGrid();
+  }
+
+  handleContext(e: React.MouseEvent<HTMLCanvasElement>) {
+    e.preventDefault();
   }
 }
 

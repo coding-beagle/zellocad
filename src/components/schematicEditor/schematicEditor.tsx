@@ -3,6 +3,7 @@ import SchematicGridRenderer, {
   SchematicGridProps,
 } from "./schematicEditorRenderer";
 import { darkModeTheme } from "../themeManager/themes";
+import { render } from "@testing-library/react";
 
 const SchematicEditor: React.FC<SchematicGridProps> = ({
   width,
@@ -28,6 +29,10 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
 
   const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
     rendererRef.current.handleWheel(e);
+  };
+
+  const handleContextMenu = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    rendererRef.current.handleContext(e);
   };
 
   useEffect(() => {
@@ -67,6 +72,7 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onWheel={handleWheel}
+      onContextMenu={handleContextMenu}
       style={{
         border: "none",
         backgroundColor: darkModeTheme.primary,

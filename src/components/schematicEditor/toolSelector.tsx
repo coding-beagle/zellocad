@@ -5,7 +5,7 @@ import { NonElectronicSchematicElement } from "./nonTronicSchematicElement";
 import { SchematicElement } from "./schematicElement";
 import ToolSelectorTool from "./toolSelectorTool";
 import Tools from "./toolsList";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface ToolSelectorProps {
   currentTool: () => NonElectronicSchematicElement | SchematicElement;
@@ -16,6 +16,20 @@ interface ToolSelectorProps {
 
 function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
   const [, setRender] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setCurrentTool(null);
+        setRender((prev) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [setCurrentTool]);
 
   return (
     <div

@@ -35,7 +35,7 @@ class SchematicGridRenderer {
   canvasSize: { x: number; y: number };
 
   // mouse stuff
-  currentMousePos: { x: number; y: number };
+  currentMousePos: { x: number; y: number } = { x: 0, y: 0 };
   lastMousePos: { x: number; y: number } = { x: 0, y: 0 };
   leftMouse: boolean = false;
   rightMouse: boolean = false;
@@ -45,6 +45,9 @@ class SchematicGridRenderer {
   isSelecting: boolean = false;
   selectionStart: { x: number; y: number } | null = null;
   selectionEnd: { x: number; y: number } | null = null;
+
+  // Tool stuff
+  currentTool: SchematicElement | NonElectronicSchematicElement | null = null;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -121,11 +124,19 @@ class SchematicGridRenderer {
 
     this.elements.forEach((element) => element.draw());
 
-    const currentTool = this.placableSelectorHandler.getCurrentSelectedTool();
-    if (currentTool !== null) {
-      const ghostItem = new currentTool({ x: 0, y: 0 }, "Ghost", null);
-      ghostItem.drawGhost(this.currentMousePos.x, this.currentMousePos.y);
+    this.ctx.save();
+    if (this.currentTool !== null) {
+      const mouseGridPositions = this.getGridPosFromScreenCoords(
+        this.currentMousePos.x,
+        this.currentMousePos.y
+      );
+      const gridScreenPos = this.getScreenPosFromSchemGrid(
+        mouseGridPositions.x,
+        mouseGridPositions.y
+      );
+      this.currentTool.drawGhost(gridScreenPos.x, gridScreenPos.y);
     }
+    this.ctx.restore();
 
     this.drawSelectionBox(); // Add selection box rendering
   }
@@ -148,40 +159,18 @@ class SchematicGridRenderer {
     this.ctx.restore();
   }
 
-  getScreenPosFromSchemGrid(x: number, y: number): { x: number; y: number };
-  getScreenPosFromSchemGrid(pos: { x: number; y: number }): {
-    x: number;
-    y: number;
-  };
-  getScreenPosFromSchemGrid(
-    xOrPos: number | { x: number; y: number },
-    y?: number
-  ): { x: number; y: number } {
+  getScreenPosFromSchemGrid(x: number, y: number): { x: number; y: number } {
     const gridSizeX = this.gridSizePx.x / this.gridRowColumns.rows;
     const gridSizeY = this.gridSizePx.y / this.gridRowColumns.columns;
 
-    if (typeof xOrPos === "object") {
-      return {
-        x:
-          (Math.max(1, Math.min(xOrPos.x, this.gridRowColumns.rows)) *
-            gridSizeX) /
-          this.scale,
-        y:
-          (Math.max(1, Math.min(xOrPos.y, this.gridRowColumns.columns)) *
-            gridSizeY) /
-          this.scale,
-      };
-    } else {
-      return {
-        x:
-          (Math.max(1, Math.min(xOrPos, this.gridRowColumns.rows)) *
-            gridSizeX) /
-          this.scale,
-        y:
-          (Math.max(1, Math.min(y!, this.gridRowColumns.columns)) * gridSizeY) /
-          this.scale,
-      };
-    }
+    return {
+      x:
+        (Math.max(1, Math.min(x, this.gridRowColumns.rows)) * gridSizeX) /
+        this.scale,
+      y:
+        (Math.max(1, Math.min(y, this.gridRowColumns.columns)) * gridSizeY) /
+        this.scale,
+    };
   }
 
   clamp = (number: number, numMin: number, numMax: number) => {
@@ -274,6 +263,11 @@ class SchematicGridRenderer {
       this.currentTransform.x += dx;
       this.currentTransform.y += dy;
       this.ctx.translate(dx, dy);
+      this.drawGrid();
+    }
+
+    this.currentTool = this.placableSelectorHandler.getCurrentSelectedTool();
+    if (this.currentTool !== null) {
       this.drawGrid();
     }
 

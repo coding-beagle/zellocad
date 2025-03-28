@@ -139,7 +139,9 @@ class SchematicGridRenderer {
     }
     this.ctx.restore();
 
-    this.drawSelectionBox(); // Add selection box rendering
+    if (this.currentTool === null) {
+      this.drawSelectionBox();
+    }
   }
 
   drawSelectionBox() {
@@ -251,7 +253,6 @@ class SchematicGridRenderer {
 
   resolveSelection() {
     const selectionBox = this.normalizeSelectionBox();
-    // console.log(selectionBox);
   }
 
   mouseMove(e: React.MouseEvent<HTMLCanvasElement>) {

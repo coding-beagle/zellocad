@@ -84,11 +84,11 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
   return (
     <>
       <ToolSelector
-        currentTool={
-          rendererRef.current?.placableSelectorHandler.getCurrentSelectedTool
+        currentTool={() =>
+          rendererRef.current?.placableSelectorHandler.getCurrentSelectedTool()
         }
-        setCurrentTool={() =>
-          rendererRef.current?.placableSelectorHandler.selectTool
+        setCurrentTool={(tool) =>
+          rendererRef.current?.placableSelectorHandler.selectTool(tool)
         }
       />
       <canvas

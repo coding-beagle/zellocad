@@ -1,21 +1,26 @@
 import { Button } from "antd";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const buttonSize = "5em";
 
-function ToolSelectorTool({ toolEnum, setCurrentTool, currentTool }) {
+function ToolSelectorTool({
+  setRender,
+  toolClass,
+  setCurrentTool,
+  currentTool,
+}) {
   return (
     <Button
       onClick={() => {
-        currentTool == toolEnum
+        currentTool() === toolClass
           ? setCurrentTool(null)
-          : setCurrentTool(toolEnum);
+          : setCurrentTool(toolClass);
+        setRender((prev) => !prev); // bit janky but it wouldn't be an NT project without this funk
       }}
-      type={currentTool === toolEnum ? "primary" : "default"}
+      type={currentTool() === toolClass ? "primary" : "default"}
       style={{ height: buttonSize, width: buttonSize }}
-      title={toolEnum.name} // This adds a tooltip on hover
+      title={toolClass.name}
     >
-      {toolEnum.icon}
+      {toolClass.name}
     </Button>
   );
 }

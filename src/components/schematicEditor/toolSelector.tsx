@@ -5,6 +5,7 @@ import { SchematicElement } from "./schematicElement";
 import ToolSelectorTool from "./toolSelectorTool";
 import Tools from "./toolsList";
 import { Placable } from "./placable";
+import { useState } from "react";
 
 interface ToolSelectorProps {
   currentTool: () => Placable | SchematicElement;
@@ -12,6 +13,8 @@ interface ToolSelectorProps {
 }
 
 function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
+  const [, setRender] = useState(false);
+
   return (
     <div
       style={{
@@ -25,9 +28,10 @@ function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
       }}
     >
       <ToolSelectorTool
+        setRender={setRender}
         currentTool={currentTool}
         setCurrentTool={setCurrentTool}
-        toolEnum={Tools.Line}
+        toolClass={Tools.Line}
       />
     </div>
   );

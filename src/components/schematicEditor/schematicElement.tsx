@@ -4,7 +4,7 @@ class SchematicElement extends Placable {
   constructor(
     startPosition: { x: number; y: number },
     name: string,
-    tooltipIcon: React.ReactNode // Allows for JSX elements like FontAwesome icons or SVGs
+    tooltipIcon: React.ReactNode
   ) {
     super(startPosition, name, tooltipIcon);
   }

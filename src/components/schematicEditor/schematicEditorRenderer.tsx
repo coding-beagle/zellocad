@@ -48,6 +48,7 @@ class SchematicGridRenderer {
 
   // Tool stuff
   currentTool: SchematicElement | NonElectronicSchematicElement | null = null;
+  lastTool: SchematicElement | NonElectronicSchematicElement | null = null;
 
   constructor(
     ctx: CanvasRenderingContext2D,
@@ -277,6 +278,10 @@ class SchematicGridRenderer {
     }
 
     this.lastMousePos = { x: e.clientX, y: e.clientY };
+    if (this.lastTool !== this.currentTool) {
+      this.drawGrid();
+    }
+    this.lastTool = this.currentTool;
   }
 
   mouseDown(e: React.MouseEvent<HTMLCanvasElement>) {
@@ -326,7 +331,6 @@ class SchematicGridRenderer {
   handleWheel(e: React.WheelEvent<HTMLCanvasElement>) {
     e.preventDefault();
     const { deltaX, deltaY } = e;
-
     const zoomIntensity = 0.1;
     const zoom = Math.exp((deltaY * zoomIntensity) / 100);
 

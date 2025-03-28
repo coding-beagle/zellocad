@@ -3,7 +3,6 @@ import SchematicGridRenderer, {
   SchematicGridProps,
 } from "./schematicEditorRenderer";
 import { darkModeTheme } from "../themeManager/themes";
-import { render } from "@testing-library/react";
 
 const SchematicEditor: React.FC<SchematicGridProps> = ({
   width,
@@ -57,19 +56,32 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
 
     rendererRef.current = gridRenderer;
 
-    ctx.clearRect(0, 0, width, height);
-    gridRenderer.drawGrid();
+    const handleResize = () => {
+      if (canvasRef.current) {
+        canvasRef.current.width = window.innerWidth;
+        canvasRef.current.height = window.innerHeight;
+        rendererRef.current.canvasSize = {
+          x: window.innerWidth,
+          y: window.innerHeight,
+        };
+        rendererRef.current.drawGrid();
+        rendererRef.current.transform();
+        rendererRef.current.drawGrid();
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    handleResize();
 
     return () => {
-      // Cleanup code if necessary
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
   return (
     <canvas
       ref={canvasRef}
-      width={window.innerWidth}
-      height={window.innerHeight}
       onMouseMove={handleMouseMove}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
@@ -78,7 +90,6 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
       style={{
         border: "none",
         backgroundColor: darkModeTheme.primary,
-        // cursor: "crosshair", // Optional: changes cursor to indicate interactivity
       }}
     />
   );

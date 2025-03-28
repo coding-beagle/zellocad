@@ -3,14 +3,23 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const buttonSize = "5em";
 
-function ToolSelectorTool({ name, setCurrentTool, currentTool, icon }) {
+function ToolSelectorTool({
+  name,
+  toolEnum,
+  setCurrentTool,
+  currentTool,
+  icon,
+}) {
   return (
     <Button
       onClick={() => {
-        currentTool == name ? setCurrentTool(null) : setCurrentTool(name);
+        currentTool == toolEnum
+          ? setCurrentTool(null)
+          : setCurrentTool(toolEnum);
       }}
-      type={currentTool === name ? "primary" : "default"}
-      style={{ height: buttonSize, width: buttonSize }} // Updated to make the button square
+      type={currentTool === toolEnum ? "primary" : "default"}
+      style={{ height: buttonSize, width: buttonSize }}
+      title={name} // This adds a tooltip on hover
     >
       <FontAwesomeIcon icon={icon} size={"3x"} />
     </Button>

@@ -54,8 +54,8 @@ class SchematicGridRenderer {
       scale = 1,
       canvasWidth,
       canvasHeight,
-      initialTransformX = (canvasWidth - width) / 4, // make sure schematic starts in the middle
-      initialTransformY = (canvasHeight - height) / 4,
+      initialTransformX = (canvasWidth - width) / 2, // make sure schematic starts in the middle
+      initialTransformY = (canvasHeight - height) / 2,
     } = props;
     this.gridSizePx = { x: width, y: height };
     this.gridRowColumns = { rows: rows, columns: columns };
@@ -66,7 +66,7 @@ class SchematicGridRenderer {
     this.elements = elements;
 
     this.drawGrid();
-    this.ctx.translate(this.currentTransform.x, this.currentTransform.y);
+    this.transform();
   }
 
   clearGrid() {
@@ -207,6 +207,11 @@ class SchematicGridRenderer {
     };
   }
 
+  // make sure we translate to currentTransform on resize events
+  transform() {
+    this.ctx.translate(this.currentTransform.x, this.currentTransform.y);
+  }
+
   // handles the case where we start dragging from right and select left!
   normalizeSelectionBox() {
     const selectionCorner1 = this.getGridPosFromScreenCoords(
@@ -242,7 +247,7 @@ class SchematicGridRenderer {
 
   resolveSelection() {
     const selectionBox = this.normalizeSelectionBox();
-    console.log(selectionBox);
+    // console.log(selectionBox);
   }
 
   mouseMove(e: React.MouseEvent<HTMLCanvasElement>) {

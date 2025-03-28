@@ -1,5 +1,6 @@
 import { faCodeBranch, faXmark } from "@fortawesome/free-solid-svg-icons";
 import ToolSelectorTool from "./toolSelectorTool";
+import Tools from "./toolsEnum";
 
 interface ToolSelectorProps {
   currentTool: string;
@@ -24,12 +25,14 @@ function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
         setCurrentTool={setCurrentTool}
         name={"wire"}
         icon={faCodeBranch}
+        toolEnum={Tools.Wire}
       />
       <ToolSelectorTool
         currentTool={currentTool}
         setCurrentTool={setCurrentTool}
         name={"NC"}
         icon={faXmark}
+        toolEnum={Tools.NoConnect}
       />
     </div>
   );

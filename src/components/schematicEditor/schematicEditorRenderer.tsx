@@ -4,7 +4,9 @@
 // elements that need to be rendered.
 
 import { darkModeTheme } from "../themeManager/themes";
+import { NonElectronicSchematicElement } from "./nonTronicSchematicElement";
 import { Placable } from "./placable";
+
 import { PlacableInstantiater } from "./placableInstantiater";
 import { SchematicElement } from "./schematicElement";
 
@@ -22,7 +24,7 @@ interface SchematicGridProps {
 
 class SchematicGridRenderer {
   ctx: CanvasRenderingContext2D;
-  elements: (SchematicElement | Placable)[]; // not sure if we should mix these, could make resolving netlists harder
+  elements: (SchematicElement | NonElectronicSchematicElement)[]; // not sure if we should mix these, could make resolving netlists harder
   placableSelectorHandler: PlacableInstantiater;
 
   // schematic meta stuff
@@ -64,6 +66,7 @@ class SchematicGridRenderer {
     this.gridRowColumns = { rows: rows, columns: columns };
     this.scale = scale;
     this.ctx = ctx;
+    Placable.ctx = ctx;
     this.canvasSize = { x: canvasWidth, y: canvasHeight };
     this.currentTransform = { x: initialTransformX, y: initialTransformY };
     this.elements = elements;
@@ -117,6 +120,12 @@ class SchematicGridRenderer {
     this.drawSchematicSheet();
 
     this.elements.forEach((element) => element.draw());
+
+    const currentTool = this.placableSelectorHandler.getCurrentSelectedTool();
+    if (currentTool !== null) {
+      const ghostItem = new currentTool({ x: 0, y: 0 }, "Ghost", null);
+      ghostItem.drawGhost(this.currentMousePos.x, this.currentMousePos.y);
+    }
 
     this.drawSelectionBox(); // Add selection box rendering
   }

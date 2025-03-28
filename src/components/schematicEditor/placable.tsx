@@ -24,6 +24,10 @@ abstract class Placable {
     console.log("Drawing: ", this.name);
   }
 
+  drawGhost(x: number, y: number): void {
+    console.log("drawing ghost at ", x, y);
+  }
+
   selectionInHitbox(x1: number, y1: number, x2: number, y2: number): boolean {
     if (!this.selectionHitbox) {
       return false;

@@ -1,15 +1,17 @@
 // We should modify this file to be able to take in a list of tools, whether it is a horizontal or vertical toolbar,
 // and where it is positioned on the screen
 
+import { NonElectronicSchematicElement } from "./nonTronicSchematicElement";
 import { SchematicElement } from "./schematicElement";
 import ToolSelectorTool from "./toolSelectorTool";
 import Tools from "./toolsList";
-import { Placable } from "./placable";
 import { useState } from "react";
 
 interface ToolSelectorProps {
-  currentTool: () => Placable | SchematicElement;
-  setCurrentTool: (tool: Placable | SchematicElement) => void;
+  currentTool: () => NonElectronicSchematicElement | SchematicElement;
+  setCurrentTool: (
+    tool: NonElectronicSchematicElement | SchematicElement
+  ) => void;
 }
 
 function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {

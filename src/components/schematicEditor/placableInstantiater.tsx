@@ -6,9 +6,13 @@
 
 import { Placable } from "./placable";
 import { SchematicElement } from "./schematicElement";
+import { NonElectronicSchematicElement } from "./nonTronicSchematicElement";
 
 export class PlacableInstantiater {
-  private selectedTool: Placable | SchematicElement | null = null;
+  private selectedTool:
+    | NonElectronicSchematicElement
+    | SchematicElement
+    | null = null;
   private placementPosition: { x: number; y: number } | null = null;
 
   constructor() {
@@ -16,7 +20,7 @@ export class PlacableInstantiater {
   }
 
   // Select a tool for placement
-  selectTool(tool: Placable | SchematicElement) {
+  selectTool(tool: NonElectronicSchematicElement | SchematicElement) {
     this.selectedTool = tool;
     this.placementPosition = null; // Reset placement position
   }

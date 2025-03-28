@@ -4,6 +4,8 @@
 // elements that need to be rendered.
 
 import { darkModeTheme } from "../themeManager/themes";
+import { Placable } from "./placable";
+import { PlacableInstantiater } from "./placableInstantiater";
 import { SchematicElement } from "./schematicElement";
 
 interface SchematicGridProps {
@@ -20,7 +22,8 @@ interface SchematicGridProps {
 
 class SchematicGridRenderer {
   ctx: CanvasRenderingContext2D;
-  elements: SchematicElement[];
+  elements: (SchematicElement | Placable)[]; // not sure if we should mix these, could make resolving netlists harder
+  placableSelectorHandler: PlacableInstantiater;
 
   // schematic meta stuff
   gridSizePx: { x: number; y: number };
@@ -64,6 +67,8 @@ class SchematicGridRenderer {
     this.canvasSize = { x: canvasWidth, y: canvasHeight };
     this.currentTransform = { x: initialTransformX, y: initialTransformY };
     this.elements = elements;
+
+    this.placableSelectorHandler = new PlacableInstantiater();
 
     this.drawGrid();
     this.transform();

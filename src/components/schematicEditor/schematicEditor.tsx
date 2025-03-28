@@ -3,6 +3,8 @@ import SchematicGridRenderer, {
   SchematicGridProps,
 } from "./schematicEditorRenderer";
 import { darkModeTheme } from "../themeManager/themes";
+import ToolSelector from "./toolSelector";
+import { render } from "@testing-library/react";
 
 const SchematicEditor: React.FC<SchematicGridProps> = ({
   width,
@@ -80,18 +82,28 @@ const SchematicEditor: React.FC<SchematicGridProps> = ({
   }, []);
 
   return (
-    <canvas
-      ref={canvasRef}
-      onMouseMove={handleMouseMove}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onWheel={handleWheel}
-      onContextMenu={handleContextMenu}
-      style={{
-        border: "none",
-        backgroundColor: darkModeTheme.primary,
-      }}
-    />
+    <>
+      <ToolSelector
+        currentTool={
+          rendererRef.current?.placableSelectorHandler.getCurrentSelectedTool
+        }
+        setCurrentTool={() =>
+          rendererRef.current?.placableSelectorHandler.selectTool
+        }
+      />
+      <canvas
+        ref={canvasRef}
+        onMouseMove={handleMouseMove}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
+        onWheel={handleWheel}
+        onContextMenu={handleContextMenu}
+        style={{
+          border: "none",
+          backgroundColor: darkModeTheme.primary,
+        }}
+      />
+    </>
   );
 };
 

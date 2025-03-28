@@ -3,13 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 const buttonSize = "5em";
 
-function ToolSelectorTool({
-  name,
-  toolEnum,
-  setCurrentTool,
-  currentTool,
-  icon,
-}) {
+function ToolSelectorTool({ toolEnum, setCurrentTool, currentTool }) {
   return (
     <Button
       onClick={() => {
@@ -19,9 +13,9 @@ function ToolSelectorTool({
       }}
       type={currentTool === toolEnum ? "primary" : "default"}
       style={{ height: buttonSize, width: buttonSize }}
-      title={name} // This adds a tooltip on hover
+      title={toolEnum.name} // This adds a tooltip on hover
     >
-      <FontAwesomeIcon icon={icon} size={"3x"} />
+      {toolEnum.icon}
     </Button>
   );
 }

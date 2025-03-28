@@ -1,10 +1,14 @@
-import { faCodeBranch, faXmark } from "@fortawesome/free-solid-svg-icons";
+// We should modify this file to be able to take in a list of tools, whether it is a horizontal or vertical toolbar,
+// and where it is positioned on the screen
+
+import { SchematicElement } from "./schematicElement";
 import ToolSelectorTool from "./toolSelectorTool";
-import Tools from "./toolsEnum";
+import Tools from "./toolsList";
+import { Placable } from "./placable";
 
 interface ToolSelectorProps {
-  currentTool: string;
-  setCurrentTool: (tool: string) => void;
+  currentTool: () => Placable | SchematicElement;
+  setCurrentTool: (tool: Placable | SchematicElement) => void;
 }
 
 function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
@@ -23,16 +27,7 @@ function ToolSelector({ currentTool, setCurrentTool }: ToolSelectorProps) {
       <ToolSelectorTool
         currentTool={currentTool}
         setCurrentTool={setCurrentTool}
-        name={"wire"}
-        icon={faCodeBranch}
-        toolEnum={Tools.Wire}
-      />
-      <ToolSelectorTool
-        currentTool={currentTool}
-        setCurrentTool={setCurrentTool}
-        name={"NC"}
-        icon={faXmark}
-        toolEnum={Tools.NoConnect}
+        toolEnum={Tools.Line}
       />
     </div>
   );
